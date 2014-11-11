@@ -1,0 +1,6 @@
+language: go
+go:
+  - 1.3
+
+install: go get github.com/nitrous-io/goop && go build github.com/nitrous-io/goop && (cd ..; goop install)
+script: goop go test -v ./..
