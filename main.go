@@ -30,9 +30,9 @@ func main() {
 }
 
 type PostProcessor struct {
-	Driver docker.Driver
 	c Config
 	t *template.Template
+	docker_build_fn func(*bytes.Buffer) (string, error) // to facilitate easy testing
 }
 
 type Config struct {
@@ -60,6 +60,8 @@ func (p *PostProcessor) Configure(raw_config ...interface{}) error {
 
 	p.c.tpl.UserVars = p.c.PackerUserVars
 
+	p.docker_build_fn = docker_build // configure the build function
+
 	return nil
 }
 
@@ -78,7 +80,7 @@ func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (pac
 	}
 	log.Printf("Dockerfile: %s\n", dockerfile.String())
 
-	if image_id, err := docker_build(dockerfile); err != nil { // docker build command failed
+	if image_id, err := p.docker_build_fn(dockerfile); err != nil { // docker build command failed
 		return nil, false, err
 	} else {
 		ui.Message("Built image: " + image_id)
