@@ -45,14 +45,17 @@ func TestDockerFileRender(t *testing.T) {
 func TestConfigure(t *testing.T) {
 	post_processor := new(PostProcessor)
 	raw_configs := []interface{} {
-		map[string]interface{} { "instructions": test_data.Instructions},
+		map[string]interface{} { "instructions": test_data.Instructions },
 	}
 	errs := post_processor.Configure(raw_configs...)
 	if errs != nil {
 		t.Errorf("Configure failed with errors: %#v\n", errs)
 	}
-	for i, instruction := range post_processor.c.Instructions {
-		if instruction != test_data.Instructions[i] {
+	if len(test_data.Instructions) != len(post_processor.c.Instructions) {
+		t.Fatalf("Wrong number of instructions found. Expected %d, got %d", len(test_data.Instructions), len(post_processor.c.Instructions))
+	}
+	for i, instruction := range test_data.Instructions {
+		if instruction != post_processor.c.Instructions[i] {
 			t.Error("Failed to extract instructions from configuration struct")
 			break
 		}
