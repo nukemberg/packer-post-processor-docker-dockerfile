@@ -166,6 +166,7 @@ func (p *PostProcessor)render_template(id string) (buf *bytes.Buffer, _err error
 {{ if .Volume }}VOLUME {{ stringify .Volume }}
 {{ end }}{{ if .Expose }}EXPOSE {{ join .Expose " " }}
 {{ end }}{{ if .WorkDir }}WORKDIR {{ .WorkDir }}
+{{ end }}{{ if .User }}USER {{ .User }}
 {{ end }}{{ if .Env }}{{ range $k, $v := .Env }}ENV {{ $k }} {{ render $v }}
 {{ end }}{{ end }}{{ if .Entrypoint }}ENTRYPOINT {{ stringify .Entrypoint }}
 {{ end }}{{ if .Cmd }}{{ stringify .Cmd }}{{ end }}`

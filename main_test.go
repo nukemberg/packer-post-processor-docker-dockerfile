@@ -16,12 +16,15 @@ var test_data = struct {
 	ExpectedDockerfile: `FROM test-id
 VOLUME ["/data","/logs"]
 EXPOSE 8212 1233
+WORKDIR /home/test-user
+USER test-user
 ENV testvar TESTVAL
 ENTRYPOINT ["/bin/sh"]
 `,
 	Config: map[string]interface{} {
 		"expose": []string { "8212", "1233" },
 		"user": "test-user",
+		"workdir": "/home/test-user",
 		"entrypoint": []interface{} {"/bin/sh"},
 		"env": map[string]string { "testvar": "TESTVAL" },
 		"volume": []string {"/data", "/logs" },
