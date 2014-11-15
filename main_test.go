@@ -11,13 +11,21 @@ import (
 var test_data = struct {
 	Instructions []string
 	ExpectedDockerfile string
+	Config map[string]interface{}
 }{
 	ExpectedDockerfile: `FROM test-id
-ENV test test
-USER test-user
-ENTRYPOINT /bin/sh
+VOLUME ["/data","/logs"]
+EXPOSE 8212 1233
+ENV testvar TESTVAL
+ENTRYPOINT ["/bin/sh"]
 `,
-	Instructions:  []string{ "ENV test test", "USER test-user", "ENTRYPOINT /bin/sh" },
+	Config: map[string]interface{} {
+		"expose": []string { "8212", "1233" },
+		"user": "test-user",
+		"entrypoint": []interface{} {"/bin/sh"},
+		"env": map[string]string { "testvar": "TESTVAL" },
+		"volume": []string {"/data", "/logs" },
+	},
  }
 
 func mock_ui() packer.Ui {
@@ -29,8 +37,11 @@ func mock_ui() packer.Ui {
 
 func TestDockerFileRender(t *testing.T) {
 	post_processor := new(PostProcessor)
+	if err := post_processor.Configure(test_data.Config); err != nil {
+		t.Fatalf("ERror while calling Configure(): %s", err.Error())
+	}
 
-	dockerfile, err := post_processor.render_template("test-id", test_data.Instructions)
+	dockerfile, err := post_processor.render_template("test-id")
 	if err != nil {
 		t.Fatalf("Error while rendering template: %v\n", err)
 	}
@@ -45,42 +56,57 @@ func TestDockerFileRender(t *testing.T) {
 func TestConfigure(t *testing.T) {
 	post_processor := new(PostProcessor)
 	raw_configs := []interface{} {
-		map[string]interface{} { "instructions": test_data.Instructions },
+		test_data.Config,
 	}
 	errs := post_processor.Configure(raw_configs...)
 	if errs != nil {
 		t.Errorf("Configure failed with errors: %#v\n", errs)
 	}
-	if len(test_data.Instructions) != len(post_processor.c.Instructions) {
-		t.Fatalf("Wrong number of instructions found. Expected %d, got %d", len(test_data.Instructions), len(post_processor.c.Instructions))
+	expose := test_data.Config["expose"].([]string)
+	if len(expose) != len(post_processor.c.Expose) {
+		t.Fatalf("Wrong number of ports elements, expected %d, got %d", len(expose), len(post_processor.c.Expose))
 	}
-	for i, instruction := range test_data.Instructions {
-		if instruction != post_processor.c.Instructions[i] {
-			t.Error("Failed to extract instructions from configuration struct")
-			break
+	for i, port := range expose {
+		if post_processor.c.Expose[i] != port {
+			t.Errorf("Wrong port found, expected %d, got %d", port, post_processor.c.Expose[i])
 		}
+	}
+
+}
+
+func TestProcessVariablesArray(t *testing.T) {
+	post_processor := new(PostProcessor)
+	if err := post_processor.Configure([]interface{}{}...); err != nil {
+		t.Fatalf("Failed to run configure: %s", err)
+	}
+	if post_processor.tpl == nil {
+		t.Fatal("ConfigTemplate is nil!")
+	}
+	if res := post_processor.process_var([]interface{} { "test1", "test2" }); res != `["test1","test2"]` {
+		t.Errorf("Failed to process var. Got: %s", res)
 	}
 }
 
 func TestUserVariables(t *testing.T) {
 	post_processor := new(PostProcessor)
-	raw_configs := []interface {}{
-		map[interface {}]interface {}{
-			"type":"docker-dockerfile",
-			"instructions": []interface {}{ "ENV testvar {{ user `var1` }}" },
-		},
-		map[interface {}]interface {}{
-			"packer_force":false,
-			"packer_user_variables":map[interface {}]interface {}{ "var1": "TESTVALUE" },
-			"packer_build_name":"docker",
-			"packer_builder_type":"docker",
-			"packer_debug":false,
-		},
+	post_processor.c.PackerUserVars = map[string]string { "var1": "TESTVALUE" }
+
+	if err := post_processor.prepare_config_template(); err != nil {
+		t.Fatalf("Failed to run prepare_config_template: %s", err)
 	}
-	post_processor.Configure(raw_configs...)
-	post_processor.process_variables()
-	if post_processor.c.Instructions[0] != "ENV testvar TESTVALUE" {
-		t.Errorf("User variable not properly processed. Actual rendered string: %#v", post_processor.c.Instructions[0])
+	if rendered := post_processor.render("{{ user `var1` }}"); rendered != "TESTVALUE" {
+		t.Errorf("User variable not properly processed. Actual rendered string: %#v", rendered)
+	}
+}
+
+func TestProcessVariables(t *testing.T) {
+	post_processor := new(PostProcessor)
+	post_processor.c.PackerUserVars = map[string]string {"varX": "testvalue" }
+	if err := post_processor.prepare_config_template(); err != nil {
+		t.Fatalf("Failed to run prepare_config_template: %s", err)
+	}
+	if rendered := post_processor.process_var("{{ user `varX` }}"); rendered != "testvalue" {
+		t.Errorf("Expected \"testvalue\", got: %s", rendered)
 	}
 }
 

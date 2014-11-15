@@ -6,7 +6,7 @@ This is a [packer](http://packer.io/) post processor plugin which allows setting
 
 Normally, Docker iamges built using packer cannot include user, environment variables and other metadata that is available using Dockerfiles.
 
-This plugin will automatically create a temporary Dockerfile and run `docker build` in an annonymous context. Thus the Dockerfile instructions are supported with the same format as Dockerfiles.
+This plugin will automatically create a temporary Dockerfile and run `docker build` in an annonymous context. Most Dockerfile instructions are supported as json parameters, note that `ADD`, `RUN`, `COPY` etc. are not supported because packer provisioners should be used for this functionality.
 
 ## Usage
 
@@ -17,16 +17,19 @@ In your packer template, configure the post processor:
   "post-processors": [
     {
       "type": "docker-dockerfile",
-        "instructions": [
-        "ENV SOMEENVVAR value",
-        "USER userid"
-      ]
+      "env": { "envname": "envvalue" },
+      "user": "userid",
+      "volume": ["/data"],
+      "entrypoint": ["/bin/bash", "-v"],
+      "expose": [8080, 8081]
     }
   ]
 }
 ```
 
-Instruction text can include user variables and other packer functions as documented on the packer manual.
+Values can include user variables and other packer functions as documented on the packer manual.
+
+`cmd` and `entrypoint` can have either array or string values, this mirrors Dockerfile format and functionality; See the docker build reference for details.
 
 Please note that if you are using the `docker-tag` post processor to tag the resulting artifact of this post processor then you must put both post processor on the same chain:
 
@@ -37,10 +40,11 @@ Please note that if you are using the `docker-tag` post processor to tag the res
     [
       {
         "type": "docker-dockerfile",
-        "instructions": [
-          "ENV SOMEENVVAR value",
-          "USER userid"
-        ]
+        "env": {
+          "SOMEENVVAR": "value"
+        },
+        "user": "userid",
+        "volume": ["/data", "/logs"]
       },
       {
         "type": "docker-tag",
