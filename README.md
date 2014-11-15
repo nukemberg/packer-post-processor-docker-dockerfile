@@ -69,7 +69,7 @@ Then build the packer plugin. From within the plugin source code directory use t
 
 Copy the binary `packer-post-processor-docker-dockerfile` to your packer directory.
 
-## Licesnce
+## License
 
 This plugin is released under the Apache V2 license
 
