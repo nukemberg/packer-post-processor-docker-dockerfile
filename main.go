@@ -145,7 +145,7 @@ func (p *PostProcessor) process_var(variable interface{}) string {
 	case []interface{}: return json_dump_slice(render_string_or_slice(t))
 	case string: return p.render(variable.(string))
 	case nil: return ""
-	default: panic("not sure how to handle type")
+	default: panic(errors.New("not sure how to handle type"))
 	}
 	if len(errs.Errors) > 0 {
 		panic(errs)
@@ -161,7 +161,7 @@ func json_dump_slice(data interface{}) string {
 	}
 }
 
-func (p *PostProcessor)render_template(id string) (*bytes.Buffer, error) {
+func (p *PostProcessor)render_template(id string) (buf *bytes.Buffer, _err error) {
 	template_str := `FROM {{ .ImageId }}
 {{ if .Volume }}VOLUME {{ stringify .Volume }}
 {{ end }}{{ if .Expose }}EXPOSE {{ join .Expose " " }}
@@ -173,6 +173,16 @@ func (p *PostProcessor)render_template(id string) (*bytes.Buffer, error) {
 	template_writer := bufio.NewWriter(template_buffer)
 
 	p.c.ImageId = id
+
+	defer func() {
+		if err := recover(); err != nil {
+			switch t_err := err.(type) {
+			case error: _err = t_err // caught panic, return error to caller
+			case string: _err = errors.New(t_err)
+			default:
+			}
+		}
+	}()
 
 	t, err := template.New("dockerfile").Funcs(template.FuncMap{
 		"stringify": p.process_var,
