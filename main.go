@@ -207,7 +207,7 @@ func (p *PostProcessor)render_template(id string) (buf *bytes.Buffer, _err error
 func docker_build(stdin *bytes.Buffer) (string, error) {
 	var stderr bytes.Buffer
 	var stdout bytes.Buffer
-	cmd := exec.Command("docker", "build", "--rm", "-q", "-")
+	cmd := exec.Command("docker", "build", "--force-rm=true", "--no-cache=true", "-q", "-")
 	cmd.Stdin = stdin
 	cmd.Stderr = &stderr
 	cmd.Stdout = &stdout
