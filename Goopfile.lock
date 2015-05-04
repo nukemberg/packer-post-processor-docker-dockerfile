@@ -2,7 +2,7 @@ code.google.com/p/go.crypto #69e2a90ed92d03812364aeb947b7068dc42e561e
 code.google.com/p/google-api-go-client #6ddfebb10ece847f1ae09c701834f1b15abbd8b2
 code.google.com/p/gosshold #9dd3b6b6e7b3e1b7f30c2b58c5ec5fff6bf9feff
 github.com/ActiveState/tail #068b72961a6bc5b4a82cf4fc14ccc724c0cfa73a
-github.com/going/toolkit #6185c1893604d52d36a97dd6bb1247ace93a9b80
+github.com/going/toolkit #8ab041bd33d2a0384136bb05d46857ecbef9257c
 github.com/hashicorp/atlas-go #6a87d5f443991e9916104392cd5fc77678843e1d
 github.com/hashicorp/go-checkpoint #88326f6851319068e7b34981032128c0b1a6524d
 github.com/hashicorp/go-msgpack #71c2886f5a673a35f909803f38ece5810165097b
@@ -11,7 +11,7 @@ github.com/hashicorp/yamux #b2e55852ddaf823a85c67f798080eb7d08acd71d
 github.com/howeyc/fsnotify #4894fe7efedeeef21891033e1cce3b23b9af7ad2
 github.com/mitchellh/cli #6cc8bc522243675a2882b81662b0b0d2e04b99c9
 github.com/mitchellh/go-fs #faaa223588dd7005e49bf66fa2d19e35c8c4d761
-github.com/mitchellh/go-vnc #f54c4812027006edcb7fbbb78f5d013105fe2c53
+github.com/mitchellh/go-vnc #03f3462e6e86a197451e1a13dc8eee68c970db57
 github.com/mitchellh/goamz #caaaea8b30ee15616494ee68abd5d8ebbbef05cf
 github.com/mitchellh/gophercloud-fork-40444fb #40444fbc2b10960682b34e6822eb9179216e1ae1
 github.com/mitchellh/iochan #b584a329b193e206025682ae6c10cdbe03b0cd77
@@ -27,5 +27,5 @@ github.com/vaughan0/go-ini #a98ad7ee00ec53921f08832bc06ecf7fd600e6a1
 golang.org/x/crypto #c84e1f8e3a7e322d497cd16c0e8a13c7e127baf3
 golang.org/x/net #a8c61998a557a37435f719980da368469c10bfed
 golang.org/x/oauth2 #ec6d5d770f531108a6464462b2201b74fcd09314
-google.golang.org/cloud #1122eab269eedada5953ad20967c754e316120c0
+google.golang.org/cloud #ae568912e42f2dd25f2c7cc8f34bc7ae2087eb15
 gopkg.in/tomb.v1 #dd632973f1e7218eb1089048e0798ec9ae7dceb8
