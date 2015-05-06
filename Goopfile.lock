@@ -2,7 +2,7 @@ code.google.com/p/go.crypto #69e2a90ed92d03812364aeb947b7068dc42e561e
 code.google.com/p/google-api-go-client #6ddfebb10ece847f1ae09c701834f1b15abbd8b2
 code.google.com/p/gosshold #9dd3b6b6e7b3e1b7f30c2b58c5ec5fff6bf9feff
 github.com/ActiveState/tail #068b72961a6bc5b4a82cf4fc14ccc724c0cfa73a
-github.com/going/toolkit #8ab041bd33d2a0384136bb05d46857ecbef9257c
+github.com/going/toolkit #5bff591dc40da25dcc875d3fa1a3373d74d45411
 github.com/hashicorp/atlas-go #6a87d5f443991e9916104392cd5fc77678843e1d
 github.com/hashicorp/go-checkpoint #88326f6851319068e7b34981032128c0b1a6524d
 github.com/hashicorp/go-msgpack #71c2886f5a673a35f909803f38ece5810165097b
@@ -22,10 +22,10 @@ github.com/mitchellh/packer #v0.7.5
 github.com/mitchellh/panicwrap #45cbfd3bae250c7676c077fb275be1a2968e066a
 github.com/mitchellh/prefixedio #89d9b535996bf0a185f85b59578f2e245f9e1724
 github.com/racker/perigee #44a7879d89b7040bcdb51164a83292ef5bf9deec
-github.com/rackspace/gophercloud #v1.0.0
+github.com/rackspace/gophercloud #v0.1.0
 github.com/vaughan0/go-ini #a98ad7ee00ec53921f08832bc06ecf7fd600e6a1
-golang.org/x/crypto #c84e1f8e3a7e322d497cd16c0e8a13c7e127baf3
+golang.org/x/crypto #59435533c88bd0b1254c738244da1fe96b59d05d
 golang.org/x/net #a8c61998a557a37435f719980da368469c10bfed
 golang.org/x/oauth2 #ec6d5d770f531108a6464462b2201b74fcd09314
-google.golang.org/cloud #ae568912e42f2dd25f2c7cc8f34bc7ae2087eb15
+google.golang.org/cloud #df65e0af2d15158fecd80eed6333e2927bf2ed54
 gopkg.in/tomb.v1 #dd632973f1e7218eb1089048e0798ec9ae7dceb8
