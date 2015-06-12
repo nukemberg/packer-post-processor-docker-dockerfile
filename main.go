@@ -169,7 +169,7 @@ func (p *PostProcessor)render_template(id string) (buf *bytes.Buffer, _err error
 {{ end }}{{ if .User }}USER {{ .User }}
 {{ end }}{{ if .Env }}{{ range $k, $v := .Env }}ENV {{ $k }} {{ render $v }}
 {{ end }}{{ end }}{{ if .Entrypoint }}ENTRYPOINT {{ stringify .Entrypoint }}
-{{ end }}{{ if .Cmd }}{{ stringify .Cmd }}{{ end }}`
+{{ end }}{{ if .Cmd }}CMD {{ stringify .Cmd }}{{ end }}`
 	template_buffer := new(bytes.Buffer)
 	template_writer := bufio.NewWriter(template_buffer)
 

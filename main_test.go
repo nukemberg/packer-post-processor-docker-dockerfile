@@ -20,12 +20,13 @@ WORKDIR /home/test-user
 USER test-user
 ENV testvar TESTVAL
 ENTRYPOINT ["/bin/sh"]
-`,
+CMD ["echo","hello"]`,
 	Config: map[string]interface{} {
 		"expose": []string { "8212", "1233" },
 		"user": "test-user",
 		"workdir": "/home/test-user",
 		"entrypoint": []interface{} {"/bin/sh"},
+		"cmd": []interface{} {"echo", "hello"},
 		"env": map[string]string { "testvar": "TESTVAL" },
 		"volume": []string {"/data", "/logs" },
 	},
