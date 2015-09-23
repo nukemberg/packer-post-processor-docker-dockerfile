@@ -1,23 +1,24 @@
 package main
 
 import (
-	"github.com/mitchellh/packer/packer/plugin"
-	"github.com/mitchellh/packer/packer"
-	"github.com/mitchellh/packer/common"
-	"github.com/mitchellh/packer/builder/docker"
-	"github.com/mitchellh/packer/post-processor/docker-import"
+	"bufio"
+	"bytes"
 	"encoding/json"
-	"log"
+	"errors"
 	"fmt"
+	"github.com/mitchellh/packer/builder/docker"
+	"github.com/mitchellh/packer/common"
+	"github.com/mitchellh/packer/packer"
+	"github.com/mitchellh/packer/packer/plugin"
+	"github.com/mitchellh/packer/post-processor/docker-import"
+	"log"
 	"os"
 	"os/exec"
-	"bytes"
-	"bufio"
-	"text/template"
-	"strings"
 	"regexp"
-	"errors"
+	"strings"
+	"text/template"
 )
+
 const BuilderId = "packer.post-processor.docker-dockerfile"
 
 func main() {
@@ -31,25 +32,24 @@ func main() {
 }
 
 type PostProcessor struct {
-	c Config
-	t *template.Template
+	c               Config
+	t               *template.Template
 	docker_build_fn func(*bytes.Buffer) (string, error) // to facilitate easy testing
-	tpl *packer.ConfigTemplate
+	tpl             *packer.ConfigTemplate
 }
 
 type Config struct {
-	common.PackerConfig     `mapstructure:",squash"`
+	common.PackerConfig `mapstructure:",squash"`
 
-	Expose []string         `mapstructure:"expose"`
-	User string             `mapstructure:"user"`
-	Env map[string]string   `mapstructure:"env"`
-	Volume []string         `mapstructure:"volume"`
-	WorkDir string          `mapstructure:"workdir"`
-	Entrypoint interface{}  `mapstructure:"entrypoint"`
-	Cmd interface{}         `mapstructure:"cmd"`
-	ImageId string
+	Expose     []string          `mapstructure:"expose"`
+	User       string            `mapstructure:"user"`
+	Env        map[string]string `mapstructure:"env"`
+	Volume     []string          `mapstructure:"volume"`
+	WorkDir    string            `mapstructure:"workdir"`
+	Entrypoint interface{}       `mapstructure:"entrypoint"`
+	Cmd        interface{}       `mapstructure:"cmd"`
+	ImageId    string
 }
-
 
 func (p *PostProcessor) Configure(raw_config ...interface{}) error {
 	var err error
@@ -58,14 +58,18 @@ func (p *PostProcessor) Configure(raw_config ...interface{}) error {
 		return err
 	}
 	p.docker_build_fn = docker_build // configure the build function
-	if err = p.prepare_config_template(); err != nil { return err }
+	if err = p.prepare_config_template(); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (p *PostProcessor) prepare_config_template() error {
 	tpl, err := packer.NewConfigTemplate()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	tpl.UserVars = p.c.PackerUserVars
 	p.tpl = tpl
@@ -85,22 +89,23 @@ func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (pac
 	if template_err != nil { // could not render template
 		return nil, false, template_err
 	}
+
 	log.Printf("[DEBUG] Dockerfile: %s\n", dockerfile.String())
 
 	if image_id, err := p.docker_build_fn(dockerfile); err != nil { // docker build command failed
+		ui.Error("docker build command failed: " + err.Error())
 		return nil, false, err
 	} else {
 		ui.Message("Built image: " + image_id)
 		new_artifact := &docker.ImportArtifact{
 			BuilderIdValue: dockerimport.BuilderId,
-			Driver: &docker.DockerDriver{Ui: ui, Tpl: nil},
-			IdValue: image_id,
+			Driver:         &docker.DockerDriver{Ui: ui, Tpl: nil},
+			IdValue:        image_id,
 		}
 		log.Printf("[DEBUG] artifact: %#v\n", new_artifact)
 		return new_artifact, true, nil
 	}
 }
-
 
 // Render a variable template using packer.ConfigTemplate primed with user variables
 // You must call p.prepare_config_template() before using this function
@@ -111,7 +116,6 @@ func (p *PostProcessor) render(var_tmpl string) string {
 	}
 	return rendered
 }
-
 
 // Process a variable of unknown type. This function will call render() to render any packer user variables
 // This function will panic if it can't handle the variable.
@@ -132,8 +136,10 @@ func (p *PostProcessor) process_var(variable interface{}) string {
 				ary = append(ary, p.render(item.(string)))
 			}
 			return ary
-		case string: return p.render(t)
-		case nil: return nil
+		case string:
+			return p.render(t)
+		case nil:
+			return nil
 		default:
 			errs = packer.MultiErrorAppend(errs, fmt.Errorf("Error processing %s: not a string or a string array", field))
 			return nil
@@ -141,11 +147,16 @@ func (p *PostProcessor) process_var(variable interface{}) string {
 	}
 
 	switch t := variable.(type) {
-	case []string: return json_dump_slice(render_string_or_slice(t))
-	case []interface{}: return json_dump_slice(render_string_or_slice(t))
-	case string: return p.render(variable.(string))
-	case nil: return ""
-	default: panic(errors.New("not sure how to handle type"))
+	case []string:
+		return json_dump_slice(render_string_or_slice(t))
+	case []interface{}:
+		return json_dump_slice(render_string_or_slice(t))
+	case string:
+		return p.render(variable.(string))
+	case nil:
+		return ""
+	default:
+		panic(errors.New("not sure how to handle type"))
 	}
 	if len(errs.Errors) > 0 {
 		panic(errs)
@@ -161,7 +172,7 @@ func json_dump_slice(data interface{}) string {
 	}
 }
 
-func (p *PostProcessor)render_template(id string) (buf *bytes.Buffer, _err error) {
+func (p *PostProcessor) render_template(id string) (buf *bytes.Buffer, _err error) {
 	template_str := `FROM {{ .ImageId }}
 {{ if .Volume }}VOLUME {{ stringify .Volume }}
 {{ end }}{{ if .Expose }}EXPOSE {{ join .Expose " " }}
@@ -178,8 +189,10 @@ func (p *PostProcessor)render_template(id string) (buf *bytes.Buffer, _err error
 	defer func() {
 		if err := recover(); err != nil {
 			switch t_err := err.(type) {
-			case error: _err = t_err // caught panic, return error to caller
-			case string: _err = errors.New(t_err)
+			case error:
+				_err = t_err // caught panic, return error to caller
+			case string:
+				_err = errors.New(t_err)
 			default:
 			}
 		}
@@ -187,7 +200,7 @@ func (p *PostProcessor)render_template(id string) (buf *bytes.Buffer, _err error
 
 	t, err := template.New("dockerfile").Funcs(template.FuncMap{
 		"stringify": p.process_var,
-		"join": strings.Join,
+		"join":      strings.Join,
 		"render": func(s string) string {
 			return p.render(s)
 		},
@@ -213,6 +226,7 @@ func docker_build(stdin *bytes.Buffer) (string, error) {
 	cmd.Stdout = &stdout
 
 	if err := cmd.Start(); err != nil {
+		log.Println("[ERR] docker build failed to start")
 		return "", err
 	}
 	if err := cmd.Wait(); err != nil {
@@ -221,10 +235,10 @@ func docker_build(stdin *bytes.Buffer) (string, error) {
 	}
 	log.Println("Docker build command output:\n" + stdout.String())
 	lines := strings.Split(stdout.String(), "\n")
-	last_line := lines[len(lines) - 2] // we seem to have a trailing empty line
+	last_line := lines[len(lines)-2] // we seem to have a trailing empty line
 	image_id_regexp := regexp.MustCompile("Successfully built ([a-f0-9]+)")
 	if matches := image_id_regexp.FindStringSubmatch(last_line); len(matches) > 0 {
-		image_id := matches[len(matches) - 1]
+		image_id := matches[len(matches)-1]
 		return image_id, nil
 	} else {
 		return "", errors.New("Could not parse `docker build` output")
