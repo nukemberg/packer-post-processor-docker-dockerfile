@@ -1,17 +1,17 @@
 package main
 
 import (
-	"testing"
 	"bytes"
-	"reflect"
-	"github.com/mitchellh/packer/packer"
 	"github.com/mitchellh/packer/builder/docker"
+	"github.com/mitchellh/packer/packer"
+	"reflect"
+	"testing"
 )
 
 var test_data = struct {
-	Instructions []string
+	Instructions       []string
 	ExpectedDockerfile string
-	Config map[string]interface{}
+	Config             map[string]interface{}
 }{
 	ExpectedDockerfile: `FROM test-id
 VOLUME ["/data","/logs"]
@@ -21,16 +21,16 @@ USER test-user
 ENV testvar TESTVAL
 ENTRYPOINT ["/bin/sh"]
 CMD ["echo","hello"]`,
-	Config: map[string]interface{} {
-		"expose": []string { "8212", "1233" },
-		"user": "test-user",
-		"workdir": "/home/test-user",
-		"entrypoint": []interface{} {"/bin/sh"},
-		"cmd": []interface{} {"echo", "hello"},
-		"env": map[string]string { "testvar": "TESTVAL" },
-		"volume": []string {"/data", "/logs" },
+	Config: map[string]interface{}{
+		"expose":     []string{"8212", "1233"},
+		"user":       "test-user",
+		"workdir":    "/home/test-user",
+		"entrypoint": []interface{}{"/bin/sh"},
+		"cmd":        []interface{}{"echo", "hello"},
+		"env":        map[string]string{"testvar": "TESTVAL"},
+		"volume":     []string{"/data", "/logs"},
 	},
- }
+}
 
 func mock_ui() packer.Ui {
 	return &packer.BasicUi{
@@ -59,7 +59,7 @@ func TestDockerFileRender(t *testing.T) {
 
 func TestConfigure(t *testing.T) {
 	post_processor := new(PostProcessor)
-	raw_configs := []interface{} {
+	raw_configs := []interface{}{
 		test_data.Config,
 	}
 	errs := post_processor.Configure(raw_configs...)
@@ -86,14 +86,14 @@ func TestProcessVariablesArray(t *testing.T) {
 	if post_processor.tpl == nil {
 		t.Fatal("ConfigTemplate is nil!")
 	}
-	if res := post_processor.process_var([]interface{} { "test1", "test2" }); res != `["test1","test2"]` {
+	if res := post_processor.process_var([]interface{}{"test1", "test2"}); res != `["test1","test2"]` {
 		t.Errorf("Failed to process var. Got: %s", res)
 	}
 }
 
 func TestUserVariables(t *testing.T) {
 	post_processor := new(PostProcessor)
-	post_processor.c.PackerUserVars = map[string]string { "var1": "TESTVALUE" }
+	post_processor.c.PackerUserVars = map[string]string{"var1": "TESTVALUE"}
 
 	if err := post_processor.prepare_config_template(); err != nil {
 		t.Fatalf("Failed to run prepare_config_template: %s", err)
@@ -105,7 +105,7 @@ func TestUserVariables(t *testing.T) {
 
 func TestProcessVariables(t *testing.T) {
 	post_processor := new(PostProcessor)
-	post_processor.c.PackerUserVars = map[string]string {"varX": "testvalue" }
+	post_processor.c.PackerUserVars = map[string]string{"varX": "testvalue"}
 	if err := post_processor.prepare_config_template(); err != nil {
 		t.Fatalf("Failed to run prepare_config_template: %s", err)
 	}
@@ -116,8 +116,8 @@ func TestProcessVariables(t *testing.T) {
 
 func TestPostProcess(t *testing.T) {
 	called := false
-	mock_build_fn := func (stdin *bytes.Buffer) (string, error) {
-		if dockerfile := stdin.String(); dockerfile != "FROM test-repository\n" {
+	mock_build_fn := func(stdin *bytes.Buffer) (string, error) {
+		if dockerfile := stdin.String(); dockerfile != "FROM 21d3de5c8ee5\n" {
 			t.Errorf("Build function did not get the expected dockerfile. Got: %s\n", dockerfile)
 		}
 		called = true
@@ -125,11 +125,11 @@ func TestPostProcess(t *testing.T) {
 	}
 	post_processor := new(PostProcessor)
 	post_processor.docker_build_fn = mock_build_fn
-	artifact, keep, err := post_processor.PostProcess(mock_ui(), &docker.ImportArtifact{IdValue: "test-repository", BuilderIdValue: docker.BuilderIdImport })
+	artifact, keep, err := post_processor.PostProcess(mock_ui(), &docker.ImportArtifact{IdValue: "21d3de5c8ee557010b3a355d136bab29aad5d9cfd53c2ea4ac47dd466bbd6e2b", BuilderIdValue: docker.BuilderIdImport})
 	if err != nil {
 		t.Fatalf("Error returned from PostProcess: %s", err.Error())
 	}
-	if ! keep {
+	if !keep {
 		t.Error("keep must be true, got false")
 	}
 	if artifact == nil {
@@ -141,14 +141,21 @@ func TestPostProcess(t *testing.T) {
 	if artifact.BuilderId() != docker.BuilderIdImport {
 		t.Errorf("Wrong artifact builder id: %s", artifact.BuilderId())
 	}
-	if r_artifact := reflect.ValueOf(artifact); ! r_artifact.Type().ConvertibleTo(reflect.TypeOf(&docker.ImportArtifact{})) {
+	if r_artifact := reflect.ValueOf(artifact); !r_artifact.Type().ConvertibleTo(reflect.TypeOf(&docker.ImportArtifact{})) {
 		t.Error("artifact is not of type docker.ImportArtifact")
 	} else {
-		if _, ok := r_artifact.Elem().FieldByName("Driver").Interface().(docker.Driver); ! ok {
+		if _, ok := r_artifact.Elem().FieldByName("Driver").Interface().(docker.Driver); !ok {
 			t.Errorf("Artifact driver field has wrong type")
 		}
 	}
-	if ! called {
+	if !called {
 		t.Error("Build function not called")
+	}
+}
+
+func TestTrimArtifactId(t *testing.T) {
+	var bad_artifact_id = "21d3de5c8ee557010b3a355d136bab29aad5d9cfd53c2ea4ac47dd466bbd6e2b"
+	if len(trim_artifact_id(bad_artifact_id)) != 12 {
+		t.Error("trim_artifact_id should return 12 characters")
 	}
 }

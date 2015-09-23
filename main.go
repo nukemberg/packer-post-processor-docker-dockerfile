@@ -85,7 +85,7 @@ func (p *PostProcessor) PostProcess(ui packer.Ui, artifact packer.Artifact) (pac
 		return nil, false, err
 	}
 
-	dockerfile, template_err := p.render_template(artifact.Id())
+	dockerfile, template_err := p.render_template(trim_artifact_id(artifact.Id()))
 	if template_err != nil { // could not render template
 		return nil, false, template_err
 	}
@@ -242,5 +242,15 @@ func docker_build(stdin *bytes.Buffer) (string, error) {
 		return image_id, nil
 	} else {
 		return "", errors.New("Could not parse `docker build` output")
+	}
+}
+
+func trim_artifact_id(artifact_id string) string {
+	// Removing runes to workaround this issue:
+	// https://github.com/docker/docker/issues/16218
+	if len(artifact_id) >= 64 {
+		return artifact_id[:12]
+	} else {
+		return artifact_id
 	}
 }
